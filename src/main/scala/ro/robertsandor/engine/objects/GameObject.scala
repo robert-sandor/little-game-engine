@@ -28,10 +28,9 @@ class GameObject(parent: Option[GameObject]) {
 
   def loadName(data: Map[String, Any]): Unit = {
     data.get("name") match {
-      case nameData: Some[String] => {
+      case nameData: Some[String] =>
         name = nameData.get
         fullName = generateFullName(this)
-      }
       case _ => throw new RuntimeException(s"The gameobject $data does not have a name field!");
     }
   }
@@ -44,10 +43,10 @@ class GameObject(parent: Option[GameObject]) {
 
   def loadChildren(data: Map[String, Any]): Unit = {
     data.get("children") match {
-      case childrenList: Some[java.util.List[java.util.Map[String, Any]]] =>
-        childrenList.get.asScala.foreach(childData => {
+      case childrenList: Some[List[Map[String, Any]]] =>
+        childrenList.get.foreach(childData => {
           val gameObject: GameObject = new GameObject(Some(this))
-          gameObject.loadData(childData.asScala.toMap)
+          gameObject.loadData(childData.toMap)
           children += (gameObject.name -> gameObject)
         })
       case _ =>
@@ -56,9 +55,9 @@ class GameObject(parent: Option[GameObject]) {
 
   def loadComponents(data: Map[String, Any]): Unit = {
     data.get("components") match {
-      case componentsList: Some[java.util.List[java.util.Map[String, Any]]] =>
-        componentsList.get.asScala.foreach(componentData => {
-          val component = ComponentUtils.newComponent(this, componentData.asScala.toMap)
+      case componentsList: Some[List[Map[String, Any]]] =>
+        componentsList.get.foreach(componentData => {
+          val component = ComponentUtils.newComponent(this, componentData)
           components += (component.getType -> component)
         })
       case _ =>

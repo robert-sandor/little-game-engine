@@ -1,5 +1,0 @@
-services:
-  renderer: "ro.robertsandor.engine.services.JavaFXRenderer"
-
-components:
-  render: "ro.robertsandor.engine.components.JavaFXRenderComponent"

@@ -1,43 +1,36 @@
 package ro.robertsandor.engine
 
-import org.yaml.snakeyaml.Yaml
+import org.json4s._
+import org.json4s.native.JsonMethods._
 import ro.robertsandor.engine.components.Component
 import ro.robertsandor.engine.mapping.Mapping
 import ro.robertsandor.engine.objects.GameObject
 import ro.robertsandor.engine.services.Service
 
-import scala.collection.JavaConverters._
 import scala.io.Source
 import scala.util.Properties
+
 
 /**
   * Created by robert on 5/22/17.
   */
 object Game {
+  implicit val formats = DefaultFormats
 
-  def newGameFromYaml(yamlPath: String): Unit = {
-    val yaml = new Yaml()
-    val gameContent = Source.fromFile(yamlPath, "utf-8")
+  def newGameFromJson(jsonPath: String): Unit = {
+    val gameContent = Source.fromFile(jsonPath, "utf-8")
       .getLines
       .mkString(Properties.lineSeparator)
-    val yamlResult = yaml.load(gameContent)
+    val jsonResult = parse(gameContent)
 
-    val scalaMap: Map[String, Any] = parseResult(yamlResult)
-
-    yamlResult match {
-      case data: java.util.Map[String, Any] => {
+    jsonResult match {
+      case data: JObject => {
         val rootObject = new GameObject(None)
-        rootObject.loadData(data.asScala.toMap)
+        rootObject.loadData(data.extract[Map[String, Any]])
         val gameState = new GameState(rootObject)
-        println(gameState.getRootObject.getChildren("anotherChildObject").getFullName)
+        println(gameState.getRootObject.getChildren("childGameObject").getChildren("childOfChild").getFullName)
       }
       case _ => throw new RuntimeException("Invalid game file format!")
-    }
-  }
-
-  def parseResult(yamlResult: AnyRef): Map[String, Any] = {
-    yamlResult match {
-      case javaMap: java.util.Map[String, Any] =>
     }
   }
 
@@ -46,24 +39,23 @@ object Game {
   }
 
   def loadMapping(yamlPath: String): Unit = {
-    val yaml = new Yaml()
     val mappingContent = Source.fromFile(yamlPath, "utf-8")
       .getLines
       .mkString(Properties.lineSeparator)
-    val yamlResult = yaml.load(mappingContent)
+    val jsonResult = parse(mappingContent)
 
-    yamlResult match {
-      case map: java.util.Map[String, Any] =>
-        loadServiceMapping(map.asScala.get("services"))
-        loadComponentMapping(map.asScala.get("components"))
+    jsonResult match {
+      case data: JObject =>
+        loadServiceMapping(data.extract[Map[String, Any]].get("services"))
+        loadComponentMapping(data.extract[Map[String, Any]].get("components"))
       case _ => throw new RuntimeException("Invalid mapping format!")
     }
   }
 
   private def loadServiceMapping(serviceMapping: Option[Any]) = {
     serviceMapping.get match {
-      case serviceMap: java.util.Map[String, String] =>
-        serviceMap.asScala.foreach(_ match {
+      case serviceMap: Map[String, String] =>
+        serviceMap.foreach(_ match {
           case (name: String, className: String) =>
             try
               Mapping.serviceMap += (name -> Class.forName(className).asSubclass(classOf[Service]))
@@ -79,8 +71,8 @@ object Game {
 
   private def loadComponentMapping(componentMapping: Option[Any]): Unit = {
     componentMapping.get match {
-      case componentMap: java.util.Map[String, String] =>
-        componentMap.asScala.foreach(_ match {
+      case componentMap: Map[String, String] =>
+        componentMap.foreach(_ match {
           case (name: String, className: String) =>
             try {
               Mapping.componentMap += name -> Class.forName(className).asSubclass(classOf[Component])

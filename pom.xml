@@ -19,7 +19,8 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <encoding>UTF-8</encoding>
-        <scala.version>2.12.2</scala.version>
+        <scala.language.version>2.12</scala.language.version>
+        <scala.version>${scala.language.version}.2</scala.version>
     </properties>
 
     <!--
@@ -51,15 +52,15 @@
             <version>3.5</version>
         </dependency>
         <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-            <version>1.18</version>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-native_${scala.language.version}</artifactId>
+            <version>3.5.2</version>
         </dependency>
     </dependencies>
 
     <build>
         <sourceDirectory>src/main/scala</sourceDirectory>
-        <testSourceDirectory>src/test/scala</testSourceDirectory>
+        <!--<testSourceDirectory>src/test/scala</testSourceDirectory>-->
         <plugins>
             <plugin>
                 <groupId>org.scala-tools</groupId>

@@ -8,8 +8,8 @@ import ro.robertsandor.engine.Game
 object App {
 
   def main(args: Array[String]) {
-    Game.loadMapping(getClass.getResource("/mapping.yaml").getPath)
-    Game.newGameFromYaml(getClass.getResource("/game.yaml").getPath)
+    Game.loadMapping(getClass.getResource("/mapping.json").getPath)
+    Game.newGameFromJson(getClass.getResource("/game.json").getPath)
   }
 
 }
