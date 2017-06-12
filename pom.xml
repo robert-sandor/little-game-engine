@@ -47,6 +47,11 @@
             <version>${scala.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>${scala.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.5</version>
@@ -56,6 +61,12 @@
             <artifactId>json4s-native_${scala.language.version}</artifactId>
             <version>3.5.2</version>
         </dependency>
+        <!--MATH LIBRARY IF NEEDED-->
+        <!--<dependency>-->
+            <!--<groupId>org.scalanlp</groupId>-->
+            <!--<artifactId>breeze_2.12</artifactId>-->
+            <!--<version>0.13</version>-->
+        <!--</dependency>-->
     </dependencies>
 
     <build>

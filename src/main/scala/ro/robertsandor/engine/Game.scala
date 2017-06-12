@@ -1,88 +1,63 @@
 package ro.robertsandor.engine
 
-import org.json4s._
-import org.json4s.native.JsonMethods._
-import ro.robertsandor.engine.components.Component
+import java.util.{Timer, TimerTask}
+
+import ro.robertsandor.engine.base.GameState
+import ro.robertsandor.engine.base.GameState.currentGameState
+import ro.robertsandor.engine.base.`object`.GameObject
 import ro.robertsandor.engine.mapping.Mapping
-import ro.robertsandor.engine.objects.GameObject
-import ro.robertsandor.engine.services.Service
 
-import scala.io.Source
-import scala.util.Properties
-
-
-/**
-  * Created by robert on 5/22/17.
-  */
 object Game {
-  implicit val formats = DefaultFormats
+  def loop(initialGameState: GameState, fps: Int): Timer = {
+    currentGameState = initialGameState
 
-  def newGameFromJson(jsonPath: String): Unit = {
-    val gameContent = Source.fromFile(jsonPath, "utf-8")
-      .getLines
-      .mkString(Properties.lineSeparator)
-    val jsonResult = parse(gameContent)
-
-    jsonResult match {
-      case data: JObject => {
-        val rootObject = new GameObject(None)
-        rootObject.loadData(data.extract[Map[String, Any]])
-        val gameState = new GameState(rootObject)
-        println(gameState.getRootObject.getChildren("childGameObject").getChildren("childOfChild").getFullName)
+    val timer = new Timer()
+    val drawFrame = new TimerTask {
+      override def run(): Unit = {
+        renderGameState(currentGameState)
+        currentGameState = updateGameState(currentGameState)
       }
-      case _ => throw new RuntimeException("Invalid game file format!")
     }
+
+    timer.schedule(drawFrame, 0, 1000 / fps)
+    timer
   }
 
-  def newGame(gameState: GameState): Unit = {
+  def updateGameState(gameState: GameState): GameState = {
+    var newGameState = gameState
+    Mapping.serviceMap.foreach(serviceEntry => {
+      newGameState = serviceEntry._2.update(newGameState)
+    })
 
+    val rootGameObjects = gameState.rootGameObjects
+      .map(updateGameObject)
+
+    newGameState.copy(rootGameObjects = rootGameObjects)
   }
 
-  def loadMapping(yamlPath: String): Unit = {
-    val mappingContent = Source.fromFile(yamlPath, "utf-8")
-      .getLines
-      .mkString(Properties.lineSeparator)
-    val jsonResult = parse(mappingContent)
-
-    jsonResult match {
-      case data: JObject =>
-        loadServiceMapping(data.extract[Map[String, Any]].get("services"))
-        loadComponentMapping(data.extract[Map[String, Any]].get("components"))
-      case _ => throw new RuntimeException("Invalid mapping format!")
-    }
+  def updateGameObject(gameObject: GameObject): GameObject = {
+    updateGameObjectChildren(
+      updateGameObjectComponents(gameObject)
+    )
   }
 
-  private def loadServiceMapping(serviceMapping: Option[Any]) = {
-    serviceMapping.get match {
-      case serviceMap: Map[String, String] =>
-        serviceMap.foreach(_ match {
-          case (name: String, className: String) =>
-            try
-              Mapping.serviceMap += (name -> Class.forName(className).asSubclass(classOf[Service]))
-            catch {
-              case _: ClassNotFoundException => throw new RuntimeException(s"Class $className was not found in classpath!")
-              case _: Throwable => throw new RuntimeException(s"Class $className might not be extending Service!")
-            }
-          case _ => throw new RuntimeException("Invalid service mapping format!")
-        })
-      case _ => throw new RuntimeException("Invalid service mapping format!")
-    }
+  def updateGameObjectComponents(gameObject: GameObject): GameObject = {
+    var newGameObject = gameObject
+
+    gameObject.components.foreach(component => {
+      newGameObject = Mapping.componentMap(component.componentType).update(newGameObject)
+    })
+
+    newGameObject
   }
 
-  private def loadComponentMapping(componentMapping: Option[Any]): Unit = {
-    componentMapping.get match {
-      case componentMap: Map[String, String] =>
-        componentMap.foreach(_ match {
-          case (name: String, className: String) =>
-            try {
-              Mapping.componentMap += name -> Class.forName(className).asSubclass(classOf[Component])
-            } catch {
-              case _: ClassNotFoundException => throw new RuntimeException(s"Class $className was not found in classpath!")
-              case _: Throwable => throw new RuntimeException(s"Class $className might not be extending Component!")
-            }
-          case _ => throw new RuntimeException("Invalid component mapping format!")
-        })
-      case _ => throw new RuntimeException("Invalid component mapping format!")
-    }
+  def updateGameObjectChildren(gameObject: GameObject): GameObject = {
+    val newChildren = gameObject.children.map(updateGameObject)
+    gameObject.copy(children = newChildren)
   }
+
+  def renderGameState(gameState: GameState): Unit = {
+    Mapping.renderService.get.render(gameState)
+  }
+
 }

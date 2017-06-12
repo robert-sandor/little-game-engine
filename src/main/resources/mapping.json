@@ -1,8 +1,10 @@
 {
   "services": {
-    "renderer": "ro.robertsandor.engine.services.JavaFXRenderer"
+    "render": "ro.robertsandor.engine.services.JavaFXRender",
+    "event": "ro.robertsandor.engine.services.EventServiceImpl"
   },
   "components": {
-    "render": "ro.robertsandor.engine.components.JavaFXRenderComponent"
+    "render": "ro.robertsandor.engine.components.JavaFXRenderComponent",
+    "ball": "ro.robertsandor.engine.components.BallComponent"
   }
 }
