@@ -2,7 +2,7 @@ package ro.robertsandor.engine.base.`object`
 
 import org.apache.commons.lang3.StringUtils.EMPTY
 import ro.robertsandor.engine.base.component.{Component, ComponentData}
-import ro.robertsandor.engine.base.transform.{Transform, Vec}
+import ro.robertsandor.engine.base.transform.Transform
 import ro.robertsandor.engine.mapping.Mapping
 
 case class GameObject(parentFullName: String,
@@ -34,7 +34,7 @@ object GameObject {
     componentData.get("type") match {
       case Some(componentType: String) => Mapping.componentMap.get(componentType) match {
         case Some(component: Component[_]) =>
-          component.newComponentData(componentData)
+          component.loadComponentData(componentData)
         case _ => throw new IllegalArgumentException(s"Component type $componentType has not been declared in the mapping")
       }
       case _ => throw new IllegalArgumentException(s"Invalid data for component $componentData")
@@ -42,7 +42,6 @@ object GameObject {
   }
 
   def newGameObject(data: Map[String, _], parent: Option[String]): GameObject = {
-    println(data)
     val parentName = parent.getOrElse(EMPTY)
 
     val name = data.getOrElse("name", throw new IllegalArgumentException("GameObject must have a name!"))
@@ -54,12 +53,12 @@ object GameObject {
       case Some(childrenList: List[Map[String, _]]) => childrenList
         .map(childData => newGameObject(childData, Some(fullName)))
       case _ =>
-        throw new IllegalArgumentException("GameObject children data should be a list of maps!")
+        List()
     }
 
     val components = data.get("components") match {
       case Some(componentList: List[Map[String, _]]) => componentList.map(componentData => newComponent(componentData, fullName))
-      case _ => throw new IllegalArgumentException("GameObject component data should be a list of maps!")
+      case _ => List()
     }
 
     val transform = data.get("transform") match {
@@ -67,6 +66,10 @@ object GameObject {
       case _ => Transform()
     }
 
-    GameObject(parentName, name, fullName, components, children, transform)
+    val gameObject = GameObject(parentName, name, fullName, components, children, transform)
+    gameObject.components.foreach(
+      (componentData) => Mapping.componentMap(componentData.componentType).init(gameObject, componentData)
+    )
+    gameObject
   }
 }

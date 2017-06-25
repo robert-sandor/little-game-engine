@@ -12,23 +12,24 @@ trait ComponentData {
 abstract class Component[T: TypeTag : ClassTag] {
   def update(gameObject: GameObject): GameObject
 
-  def newComponentData(componentMap: Map[String, _]): T
-//  = {
-//    val mirror = runtimeMirror(classTag[T].runtimeClass.getClassLoader)
-//    val clazz = typeOf[T].typeSymbol.asClass
-//    val classMirror = mirror.reflectClass(clazz)
-//    val constructor = typeOf[T].decl(termNames.CONSTRUCTOR).asMethod
-//    val constructorMirror = classMirror.reflectConstructor(constructor)
-//
-//    val constructorArgs = constructor.paramLists.flatten.map((param: Symbol) => {
-//      val paramName = param.name.toString
-//      if (param.typeSignature <:< typeOf[Option[_]])
-//        m.get(paramName)
-//      else
-//        m.getOrElse(paramName,
-//          throw new IllegalArgumentException("Map is missing required parameter named " + paramName))
-//    })
-//
-//    constructorMirror(constructorArgs: _*).asInstanceOf[ComponentData].asInstanceOf[T]
-//  }
+  def init(gameObject: GameObject, componentData: ComponentData): ComponentData = componentData
+
+  def loadComponentData(componentMap: Map[String, _]): T = {
+    val mirror = runtimeMirror(classTag[T].runtimeClass.getClassLoader)
+    val clazz = typeOf[T].typeSymbol.asClass
+    val classMirror = mirror.reflectClass(clazz)
+    val constructor = typeOf[T].decl(termNames.CONSTRUCTOR).asMethod
+    val constructorMirror = classMirror.reflectConstructor(constructor)
+
+    val constructorArgs = constructor.paramLists.flatten.map((param: Symbol) => {
+      val paramName = param.name.toString
+      if (param.typeSignature <:< typeOf[Option[_]])
+        componentMap.get(paramName)
+      else
+        componentMap.getOrElse(paramName,
+          throw new IllegalArgumentException("Map is missing required parameter named " + paramName))
+    })
+
+    constructorMirror(constructorArgs: _*).asInstanceOf[ComponentData].asInstanceOf[T]
+  }
 }

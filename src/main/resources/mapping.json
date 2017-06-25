@@ -1,7 +1,8 @@
 {
   "services": {
     "render": "ro.robertsandor.engine.services.JavaFXRender",
-    "event": "ro.robertsandor.engine.services.EventServiceImpl"
+    "event": "ro.robertsandor.engine.services.EventServiceImpl",
+    "input": "ro.robertsandor.engine.services.JavaFXInput"
   },
   "components": {
     "render": "ro.robertsandor.engine.components.JavaFXRenderComponent",

@@ -5,6 +5,7 @@ import java.util.{Timer, TimerTask}
 import ro.robertsandor.engine.base.GameState
 import ro.robertsandor.engine.base.GameState.currentGameState
 import ro.robertsandor.engine.base.`object`.GameObject
+import ro.robertsandor.engine.base.services.{EventService, RenderService}
 import ro.robertsandor.engine.mapping.Mapping
 
 object Game {
@@ -14,19 +15,30 @@ object Game {
     val timer = new Timer()
     val drawFrame = new TimerTask {
       override def run(): Unit = {
-        renderGameState(currentGameState)
-        currentGameState = updateGameState(currentGameState)
+        currentGameState = runLoop(currentGameState)
       }
     }
 
-    timer.schedule(drawFrame, 0, 1000 / fps)
+    timer.schedule(drawFrame, 0, (1000 / fps).toLong)
     timer
   }
 
+  def runLoop(gameState: GameState): GameState = {
+    renderGameState(
+      updateGameState(
+        handleEvents(gameState)
+      )
+    )
+  }
+
+  def handleEvents(currentGameState: GameState) = Mapping.eventService.get.update(currentGameState)
+
   def updateGameState(gameState: GameState): GameState = {
     var newGameState = gameState
-    Mapping.serviceMap.foreach(serviceEntry => {
-      newGameState = serviceEntry._2.update(newGameState)
+    Mapping.serviceMap.values
+      .filter(service => !(service.isInstanceOf[RenderService] || service.isInstanceOf[EventService]))
+      .foreach(serviceEntry => {
+      newGameState = serviceEntry.update(newGameState)
     })
 
     val rootGameObjects = gameState.rootGameObjects
@@ -56,8 +68,9 @@ object Game {
     gameObject.copy(children = newChildren)
   }
 
-  def renderGameState(gameState: GameState): Unit = {
+  def renderGameState(gameState: GameState): GameState = {
     Mapping.renderService.get.render(gameState)
+    gameState
   }
 
 }

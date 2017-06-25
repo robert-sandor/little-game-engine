@@ -18,11 +18,10 @@ object GameBootstrap {
   implicit val formats = DefaultFormats
   private val runtimeMirror = universe.runtimeMirror(getClass.getClassLoader)
 
-  def newGameStateFromJson(jsonPath: String): GameState = {
+  def loadGameState(jsonPath: String): GameState = {
     try {
-      val parseResult = parse(Source.fromFile(jsonPath).mkString)
-
-      val jsonResult = parseResult.extract[Map[String, Any]]
+      val jsonResult = parse(Source.fromFile(jsonPath).mkString)
+        .extract[Map[String, Any]]
 
       GameState(
         rootGameObjects = getGameObjects(jsonResult),
@@ -42,19 +41,21 @@ object GameBootstrap {
 
   def getGameObjects(gameMap: Map[String, Any]): List[GameObject] = {
     gameMap.get("objects") match {
-      case Some(list: List[Map[String, Any]]) => list.map(data => GameObject.newGameObject(data, None))
+      case Some(list: List[Map[String, Any]]) => list.map(data => GameObject. newGameObject(data, None))
       case _ => throw new RuntimeException("No objects in game file")
     }
   }
 
-  def loadMapping(jsonPath: String): Unit = {
+  def loadMappingFromFile(jsonPath: String): Unit = loadMapping(Source.fromFile(jsonPath).mkString)
+
+  def loadMapping(jsonString: String): Unit = {
     try {
-      val jsonResult = parse(Source.fromFile(jsonPath).mkString)
+      val jsonResult = parse(jsonString)
         .extract[Map[String, Map[String, String]]]
       loadServiceMapping(jsonResult.getOrElse("services", Map()))
       loadComponentMapping(jsonResult.getOrElse("components", Map()))
     } catch {
-      case e: Throwable => throw new RuntimeException(s"Failed to parse file $jsonPath", e)
+      case e: Throwable => throw new RuntimeException(s"Failed to parse file $jsonString", e)
     }
   }
 

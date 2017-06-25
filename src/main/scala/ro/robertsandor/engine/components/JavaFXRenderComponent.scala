@@ -21,7 +21,7 @@ object JavaFXRenderComponent extends Component[JavaFXRenderComponent] {
   val RENDER_TYPE_CIRCLE = "circle"
   val COMPONENT_TYPE = "render"
 
-  override def newComponentData(componentMap: Map[String, _]): JavaFXRenderComponent = {
+  override def loadComponentData(componentMap: Map[String, _]): JavaFXRenderComponent = {
     componentMap("renderType") match {
       case RENDER_TYPE_IMAGE => newImageRenderData(componentMap)
       case RENDER_TYPE_RECT => newRectRenderData(componentMap)

@@ -5,37 +5,22 @@
   },
   "objects": [
     {
-      "name": "background",
-      "transform": {
-        "position": [10, 10],
-        "size": [780, 580]
-      },
-      "components": [{
-        "type": "render",
-        "renderType": "rect",
-        "width": 780,
-        "height": 580,
-        "color": [0, 0, 0, 0]
-      }],
-      "children": [
+      "name": "circle",
+      "children": [],
+      "components": [
         {
-          "name": "movingCircle",
-          "transform": {
-            "position": [30, 30],
-            "speed": [10, 0],
-            "size": [40, 40]
-          },
-          "components": [{
-            "type": "render",
-            "renderType": "circle",
-            "diameter": 40,
-            "color": [1, 0, 0, 1]
-          },{
-            "type": "ball"
-          }],
-          "children": []
+          "type": "render",
+          "renderType": "circle",
+          "diameter": 50,
+          "color": [1, 0, 0, 1]
+        },
+        {
+          "type": "ball"
         }
-      ]
+      ],
+      "transform": {
+        "speed": [10, 10]
+      }
     }
   ]
 }

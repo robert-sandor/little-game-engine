@@ -1,8 +1,11 @@
 package ro.robertsandor.engine.services
 
+import java.util.{Timer, TimerTask}
+import javafx.application.Platform
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.Image
 import javafx.scene.paint.Color
+import javafx.scene.text.Font
 
 import ro.robertsandor.engine.base.GameState
 import ro.robertsandor.engine.base.`object`.GameObject
@@ -16,10 +19,28 @@ object JavaFXRender extends RenderService {
   val height: Int = 600
 
   var gc: GraphicsContext = _
+  var frames: Int = 0
+  var fps: Int = 0
+
+  val fpsTimer = new Timer()
+  val displayFrameRate = new TimerTask {
+    override def run(): Unit = {
+      fps = frames
+      frames = 0
+      println("fps : " + fps)
+    }
+  }
+  fpsTimer.schedule(displayFrameRate, 0, 1000)
 
   override def render(gameState: GameState): Unit = {
-    clear()
-    gameState.rootGameObjects.foreach(child => drawGameObject(child, Transform()))
+    Platform.runLater(() => {
+      clear()
+      gameState.rootGameObjects.foreach(child => drawGameObject(child, Transform()))
+      gc.setFill(new Color(0, 0, 0, 1))
+      gc.setFont(new Font(24))
+      gc.fillText("fps : " + fps, 20, 20)
+      frames += 1
+    })
   }
 
   def drawGameObject(gameObject: GameObject, parentTransform: Transform): Unit = {
@@ -74,5 +95,8 @@ object JavaFXRender extends RenderService {
     )
   }
 
-  def clear(): Unit = gc.clearRect(0, 0, width, height)
+  def clear(): Unit = {
+    gc.clearRect(0, 0, width, height)
+//    System.gc()
+  }
 }

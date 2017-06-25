@@ -30,16 +30,18 @@ object EventServiceImpl extends EventService {
     eventQueue += event
   }
 
-  override def dispatchEvent(event: BaseEvent, objectName: String): Option[Any] = {
+  override def dispatchEvent(event: BaseEvent, objectNameOpt: Option[String] = None): Unit = {
     val listenersOpt = listenerMap.get(event.name)
     listenersOpt match {
       case Some(listeners) =>
-        val toCall = listeners.find(tuple => tuple._1 == objectName)
-        toCall match {
-          case Some((_, listener)) =>
-            val result = listener.apply(event)
-            Some(result)
-          case _ => None
+        objectNameOpt match {
+          case Some(objectName) =>
+            val toCall = listeners.find(tuple => tuple._1 == objectName)
+            toCall match {
+              case Some((_, listener)) => listener.apply(event)
+              case _ => None
+            }
+          case None => listeners.foreach(_._2.apply(event))
         }
       case _ => None
     }
@@ -50,9 +52,10 @@ object EventServiceImpl extends EventService {
       val listenersOpt = listenerMap.get(event.name)
       listenersOpt match {
         case Some(listeners) =>
-          listeners.foreach(listener => {
-            listener._2.apply(event)
-          })
+          listeners.map(_._2)
+            .foreach(listener => {
+              listener.apply(event)
+            })
       }
     })
     gameState

@@ -61,12 +61,6 @@
             <artifactId>json4s-native_${scala.language.version}</artifactId>
             <version>3.5.2</version>
         </dependency>
-        <!--MATH LIBRARY IF NEEDED-->
-        <!--<dependency>-->
-            <!--<groupId>org.scalanlp</groupId>-->
-            <!--<artifactId>breeze_2.12</artifactId>-->
-            <!--<version>0.13</version>-->
-        <!--</dependency>-->
     </dependencies>
 
     <build>
@@ -96,6 +90,26 @@
                     <!-- If you have classpath issue like NoDefClassError,... -->
                     <!-- useManifestOnlyJar>false</useManifestOnlyJar -->
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>ro.robertsandor.App</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

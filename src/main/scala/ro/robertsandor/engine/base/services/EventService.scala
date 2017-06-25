@@ -14,5 +14,5 @@ trait EventService extends Service {
 
   def queueEvent(event: BaseEvent): Unit
 
-  def dispatchEvent(event: BaseEvent, objectName: String): Option[Any]
+  def dispatchEvent(event: BaseEvent, objectNameOpt: Option[String] = None): Unit
 }
